@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
@@ -34,10 +35,16 @@ public class User {
     private String username;
 
     @NotBlank
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // <---- De esta manera excluimos los atributos del JSON
-    private String password;                               //       Para que no se muestren, solo se escriban          
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // <---- De esta manera excluimos los atributos de una respuesta JSON
+    private String password;                               //       Para que no se muestren datos como en este caso el password, 
+                                                           //       solo se escriban, o usar @JsonIgnore pero esto es para ignorar campos         
 
     private boolean enabled;
+
+    @PrePersist                     // Creamos este @PrePersist cuando queramos asignar un valor a un dato, en este caso el enabled de
+    public void prePersist(){       // un usuario, para evitar poner variables con valores determinados en una clase
+        enabled = true;
+    }
 
     @Transient     // <-------- Indica al modelo que esta variable no pertenece a la persistencia de la tabla, es solo de la clase
     private boolean admin;
@@ -45,8 +52,8 @@ public class User {
     @ManyToMany
     @JoinTable(
         name = "users_roles",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "role_id"),
+        joinColumns = @JoinColumn(name = "user_id"), // Cual es la Foreing Key principal
+        inverseJoinColumns = @JoinColumn(name = "role_id"), // La relacion inversa a la foreing key o la otra conexion FK de la otra tabla
         uniqueConstraints = { @UniqueConstraint(columnNames = {"user_id","role_id"})}
     )
     private List<Role> roles;
