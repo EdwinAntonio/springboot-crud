@@ -2,7 +2,7 @@ package com.ingedwin.springboot.app.springboot_crud.entities;
 
 import java.util.List;
 
-import org.hibernate.annotations.ManyToAny;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,10 +11,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -33,12 +34,15 @@ public class User {
     private String username;
 
     @NotBlank
-    private String password;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // <---- De esta manera excluimos los atributos del JSON
+    private String password;                               //       Para que no se muestren, solo se escriban          
 
-    @NotNull
-    private Boolean enabled;
+    private boolean enabled;
 
-    @ManyToAny
+    @Transient     // <-------- Indica al modelo que esta variable no pertenece a la persistencia de la tabla, es solo de la clase
+    private boolean admin;
+
+    @ManyToMany
     @JoinTable(
         name = "users_roles",
         joinColumns = @JoinColumn(name = "user_id"),
@@ -46,4 +50,12 @@ public class User {
         uniqueConstraints = { @UniqueConstraint(columnNames = {"user_id","role_id"})}
     )
     private List<Role> roles;
+
+    public boolean isAdmin(){
+        return admin;
+    }
+
+    public boolean isEnabled(){
+        return enabled;
+    }
 }
