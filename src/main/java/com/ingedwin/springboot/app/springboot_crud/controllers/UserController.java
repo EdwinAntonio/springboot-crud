@@ -33,6 +33,17 @@ public class UserController {
         return userService.findAll();
     }
 
+    /*
+        Este metodo me ayuda a asegurarme que al momento de crear un usuario, éste no tenga permisos de Administrador, setando el valor
+        Admin en FALSE y después ahora si mandamos a llamar el metodo para crear usuarios, de esta manera agregamos otra capa de 
+        seguridad a nuestro aplicativo
+    */
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@Valid @RequestBody User user, BindingResult result){
+        user.setAdmin(false);  
+        return create(user, result);
+    }
+
     @PostMapping()
     public ResponseEntity<?> create(@Valid @RequestBody User user, BindingResult result){
         
@@ -40,6 +51,7 @@ public class UserController {
                      validation(result) : 
                      ResponseEntity.status(HttpStatus.CREATED).body(userService.save(user));
     }
+
 
     private ResponseEntity<?> validation(BindingResult result) {
         Map<String, String> error = new HashMap<>();

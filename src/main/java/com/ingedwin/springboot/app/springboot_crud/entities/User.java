@@ -1,7 +1,9 @@
 package com.ingedwin.springboot.app.springboot_crud.entities;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.Column;
@@ -38,8 +40,10 @@ public class User {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // <---- De esta manera excluimos los atributos de una respuesta JSON
     private String password;                               //       Para que no se muestren datos como en este caso el password, 
                                                            //       solo se escriban, o usar @JsonIgnore pero esto es para ignorar campos         
+    
 
-    private boolean enabled;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // <---- El Write Only, indica que este camposo solo se usara para metodos de
+    private boolean enabled;                               //       escritura pero no se mostrara en otros metodos como los de Lectura
 
     @PrePersist                     // Creamos este @PrePersist cuando queramos asignar un valor a un dato, en este caso el enabled de
     public void prePersist(){       // un usuario, para evitar poner variables con valores determinados en una clase
@@ -47,8 +51,16 @@ public class User {
     }
 
     @Transient     // <-------- Indica al modelo que esta variable no pertenece a la persistencia de la tabla, es solo de la clase
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private boolean admin;
 
+    /* 
+        Cuando tengamos problemas ciclicos cuando tengamos un @ManyToMany o un @OneToMany la notacion @JsonIgnoreProperties nos ayuda a
+        poder eliminar la parte ciclica de peticiones en proxies con peticiones Handle
+
+    */
+
+    @JsonIgnoreProperties({"users","handle","hibernateLazyInitializer"})
     @ManyToMany
     @JoinTable(
         name = "users_roles",
@@ -58,6 +70,10 @@ public class User {
     )
     private List<Role> roles;
 
+    public User() {
+        roles = new ArrayList<>();
+    }
+
     public boolean isAdmin(){
         return admin;
     }
@@ -65,4 +81,37 @@ public class User {
     public boolean isEnabled(){
         return enabled;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((id == null) ? 0 : id.hashCode());
+        result = prime * result + ((username == null) ? 0 : username.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        User other = (User) obj;
+        if (id == null) {
+            if (other.id != null)
+                return false;
+        } else if (!id.equals(other.id))
+            return false;
+        if (username == null) {
+            if (other.username != null)
+                return false;
+        } else if (!username.equals(other.username))
+            return false;
+        return true;
+    }
+
+    
 }
